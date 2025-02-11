@@ -48,24 +48,52 @@ function startFruitAndBombs() {
   fruitInterval = setInterval(() => {
     if (gameOver) clearInterval(fruitInterval);
     spawnFruit();
-  }, 1000 / gameSpeed);
+  }, 2000 / gameSpeed); // Adjust spawn frequency
 
   bombInterval = setInterval(() => {
     if (gameOver) clearInterval(bombInterval);
     spawnBomb();
-  }, 2000 / gameSpeed);
+  }, 3000 / gameSpeed); // Adjust bomb spawn frequency
 }
 
 function spawnFruit() {
-  let x = Math.random() * (canvas.width - 50);
-  let speed = gameSpeed + Math.random();
-  fruits.push({ x: x, y: 0, speed: speed });
+  let side = Math.random() < 0.5 ? 'left' : 'right';
+  let startX = side === 'left' ? 0 : canvas.width;
+  let startY = canvas.height;
+
+  let curveHeight = 300; // Height of the curve
+  let curveDirection = side === 'left' ? 1 : -1; // Left or right direction of the curve
+  let targetY = canvas.height - 100; // Where the fruit should land (just above the basket)
+  
+  // Generate fruit trajectory
+  fruits.push({
+    x: startX,
+    y: startY,
+    speed: gameSpeed + Math.random() * 2, // Speed of the fruit
+    curveHeight: curveHeight,
+    curveDirection: curveDirection,
+    targetY: targetY,
+    trajectory: Math.random() * Math.PI - Math.PI / 2, // Random curve angle
+  });
 }
 
 function spawnBomb() {
-  let x = Math.random() * (canvas.width - 50);
-  let speed = gameSpeed + Math.random();
-  bombs.push({ x: x, y: 0, speed: speed });
+  let side = Math.random() < 0.5 ? 'left' : 'right';
+  let startX = side === 'left' ? 0 : canvas.width;
+  let startY = canvas.height;
+
+  let curveHeight = 300; // Height of the curve
+  let curveDirection = side === 'left' ? 1 : -1; // Left or right direction of the curve
+  
+  // Generate bomb trajectory (similar to fruit but no targetY)
+  bombs.push({
+    x: startX,
+    y: startY,
+    speed: gameSpeed + Math.random() * 2,
+    curveHeight: curveHeight,
+    curveDirection: curveDirection,
+    trajectory: Math.random() * Math.PI - Math.PI / 2,
+  });
 }
 
 function drawBasket() {
@@ -79,9 +107,20 @@ function drawFruitsAndBombs() {
     ctx.beginPath();
     ctx.arc(fruit.x, fruit.y, 20, 0, Math.PI * 2);
     ctx.fill();
-    fruit.y += fruit.speed;
+    
+    // Move fruit with curved trajectory
+    fruit.trajectory += 0.1 * fruit.curveDirection;
+    fruit.x += Math.cos(fruit.trajectory) * 3; // Moving side-to-side in a curve
+    fruit.y -= Math.sin(fruit.trajectory) * 3; // Move up and then fall
 
-    if (fruit.y > canvas.height) fruits.splice(index, 1);
+    if (fruit.y < fruit.curveHeight) {
+      fruit.y += fruit.speed;
+    }
+
+    if (fruit.y > canvas.height) {
+      fruits.splice(index, 1);
+      gameOver = true; // Game over if fruit goes past the basket
+    }
   });
 
   bombs.forEach((bomb, index) => {
@@ -89,9 +128,19 @@ function drawFruitsAndBombs() {
     ctx.beginPath();
     ctx.arc(bomb.x, bomb.y, 20, 0, Math.PI * 2);
     ctx.fill();
-    bomb.y += bomb.speed;
+    
+    // Move bomb with curved trajectory
+    bomb.trajectory += 0.1 * bomb.curveDirection;
+    bomb.x += Math.cos(bomb.trajectory) * 3; // Moving side-to-side in a curve
+    bomb.y -= Math.sin(bomb.trajectory) * 3; // Move up and then fall
 
-    if (bomb.y > canvas.height) bombs.splice(index, 1);
+    if (bomb.y < bomb.curveHeight) {
+      bomb.y += bomb.speed;
+    }
+
+    if (bomb.y > canvas.height) {
+      bombs.splice(index, 1);
+    }
   });
 }
 
@@ -117,9 +166,9 @@ function checkCollisions() {
 }
 
 function levelUp() {
-  // Slow increase: every 1000 points, increase difficulty very slowly
-  if (score % 1000 === 0 && score > 0) {
-    gameSpeed += 0.1;
+  // Slow increase: every 5000 points, increase difficulty very slowly
+  if (score % 5000 === 0 && score > 0) {
+    gameSpeed += 0.05; // Slow increase
     level++;
   }
 }
