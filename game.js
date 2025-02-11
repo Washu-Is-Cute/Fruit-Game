@@ -19,10 +19,10 @@ function startGame(difficulty) {
   level = 1;
   gameOver = false;
 
-  // Adjust difficulty
-  if (difficulty === 'easy') gameSpeed = 2;
-  if (difficulty === 'medium') gameSpeed = 3;
-  if (difficulty === 'hard') gameSpeed = 4;
+  // Adjust difficulty (slow increase)
+  if (difficulty === 'easy') gameSpeed = 1.5;
+  if (difficulty === 'medium') gameSpeed = 2;
+  if (difficulty === 'hard') gameSpeed = 2.5;
 
   basket = { x: canvas.width / 2 - 50, y: canvas.height - 100, width: 100, height: 50 };
   
@@ -117,9 +117,10 @@ function checkCollisions() {
 }
 
 function levelUp() {
-  if (score % 100 === 0 && score > 0) {
+  // Slow increase: every 1000 points, increase difficulty very slowly
+  if (score % 1000 === 0 && score > 0) {
+    gameSpeed += 0.1;
     level++;
-    gameSpeed += 0.5;
   }
 }
 
